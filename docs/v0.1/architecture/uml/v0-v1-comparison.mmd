@@ -1,0 +1,37 @@
+%% V0 vs V1 Architecture Comparison
+%% Shows the evolution from prototype to full stack
+
+graph LR
+    subgraph V0["Phase 0: Proof of Concept"]
+        direction TB
+        V0User((User))
+        V0Next["Next.js<br/>(Vercel)"]
+        V0Auth["Auth.js<br/>(JWT only)"]
+        V0Google["Google<br/>Calendar API"]
+        
+        V0User --> V0Next
+        V0Next --> V0Auth
+        V0Auth --> V0Google
+        V0Next --> V0Google
+    end
+
+    subgraph V1["Phase 1: Full Stack"]
+        direction TB
+        V1User((User))
+        V1Next["Next.js<br/>(Vercel)"]
+        V1Auth["Auth.js<br/>(DB Adapter)"]
+        V1DB[(PostgreSQL)]
+        V1Google["Google<br/>Calendar API"]
+        V1ICloud["iCloud<br/>ICS Feed"]
+        V1Cron["Vercel Cron"]
+        
+        V1User --> V1Next
+        V1Next --> V1Auth
+        V1Auth --> V1DB
+        V1Next --> V1DB
+        V1Next --> V1Google
+        V1Next --> V1ICloud
+        V1Cron --> V1Next
+    end
+
+    V0 -.->|"Evolves to"| V1

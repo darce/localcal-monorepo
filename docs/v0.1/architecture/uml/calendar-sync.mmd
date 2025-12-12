@@ -1,0 +1,32 @@
+%% Calendar Sync Flow (V1)
+%% Sequence diagram for background calendar synchronization
+
+sequenceDiagram
+    autonumber
+    participant Cron as Vercel Cron
+    participant Sync as /api/calendar/sync
+    participant DB as PostgreSQL
+    participant GCal as Google Calendar API
+    participant ICS as iCloud ICS URL
+
+    Cron->>Sync: POST /api/calendar/sync (scheduled)
+    
+    Sync->>DB: Query calendar_connections
+    DB-->>Sync: List of connections
+    
+    loop For each connection
+        alt provider = google
+            Sync->>GCal: GET /calendars/primary/events
+            Note over Sync,GCal: Use stored refresh_token
+            GCal-->>Sync: Events JSON
+            Sync->>DB: Upsert events (source='google')
+        else provider = icloud_ics
+            Sync->>ICS: GET ICS feed URL
+            ICS-->>Sync: VCALENDAR text
+            Sync->>Sync: Parse VEVENT entries
+            Sync->>DB: Upsert events (source='icloud')
+        end
+        Sync->>DB: Update last_synced_at
+    end
+    
+    Sync-->>Cron: 200 OK

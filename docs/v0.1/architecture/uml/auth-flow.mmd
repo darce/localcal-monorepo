@@ -1,0 +1,30 @@
+%% Google OAuth + Calendar Fetch Flow
+%% Sequence diagram for V0 authentication and event retrieval
+
+sequenceDiagram
+    autonumber
+    participant U as User
+    participant App as Next.js App
+    participant Auth as Auth.js
+    participant Google as Google OAuth
+    participant GCal as Google Calendar API
+
+    U->>App: Visit /
+    U->>App: Click "Connect Google Calendar"
+    App->>Auth: Initiate OAuth flow
+    Auth->>Google: Redirect to consent screen
+    Google->>U: Show permission request
+    U->>Google: Grant calendar.readonly scope
+    Google->>Auth: Return authorization code
+    Auth->>Google: Exchange code for tokens
+    Google-->>Auth: access_token + refresh_token
+    Auth->>Auth: Store tokens in JWT cookie
+    Auth->>App: Redirect to /calendar
+    
+    App->>App: Load /calendar page
+    App->>Auth: getServerSession()
+    Auth-->>App: Session with accessToken
+    App->>GCal: GET /calendars/primary/events
+    Note over App,GCal: Authorization: Bearer {accessToken}
+    GCal-->>App: Events JSON
+    App->>U: Render Calendar component

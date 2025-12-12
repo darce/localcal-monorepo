@@ -1,0 +1,46 @@
+%% LocalCal Data Model (Entity Relationship Diagram)
+%% Shows database tables and their relationships
+
+erDiagram
+    users {
+        uuid id PK
+        varchar email UK
+        varchar name
+        timestamptz created_at
+        timestamptz updated_at
+    }
+
+    portfolios {
+        uuid id PK
+        uuid user_id FK
+        varchar slug
+        varchar title
+        text markdown
+        enum layout
+        timestamptz updated_at
+    }
+
+    events {
+        uuid id PK
+        uuid user_id FK
+        varchar title
+        text description
+        timestamptz start_at
+        timestamptz end_at
+        varchar location
+        enum source
+        varchar source_event_id
+        timestamptz updated_at
+    }
+
+    calendar_connections {
+        uuid id PK
+        uuid user_id FK
+        enum provider
+        jsonb config_json
+        timestamptz last_synced_at
+    }
+
+    users ||--o{ portfolios : "has"
+    users ||--o{ events : "owns"
+    users ||--o{ calendar_connections : "configures"

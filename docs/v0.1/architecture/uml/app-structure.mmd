@@ -1,0 +1,55 @@
+%% Next.js App Router Structure
+%% Component diagram showing page and API route organization
+
+graph TB
+    subgraph AppRouter["App Router Structure"]
+        subgraph PublicRoutes["Public Routes"]
+            Root["app/page.tsx<br/>(Landing)"]
+            UserPortfolio["app/[userSlug]/portfolio/page.tsx<br/>(Public Portfolio)"]
+        end
+
+        subgraph ProtectedRoutes["Protected Routes (Dashboard)"]
+            DashCalendar["app/(dashboard)/calendar/page.tsx"]
+            DashPortfolio["app/(dashboard)/portfolio/page.tsx"]
+            DashSettings["app/(dashboard)/settings/page.tsx"]
+        end
+
+        subgraph APIRoutes["API Route Handlers"]
+            AuthRoute["app/api/auth/[...nextauth]/route.ts"]
+            EventsRoute["app/api/events/route.ts"]
+            PortfolioRoute["app/api/portfolio/route.ts"]
+            
+            subgraph CalendarAPI["Calendar API"]
+                ConnectRoute["app/api/calendar/connect/route.ts"]
+                SyncRoute["app/api/calendar/sync/route.ts"]
+                ICSRoute["app/api/calendar/[userSlug]/ical/route.ts"]
+            end
+        end
+    end
+
+    subgraph Components["Shared Components"]
+        Calendar["components/Calendar.tsx"]
+        MarkdownEditor["components/MarkdownEditor.tsx"]
+        PortfolioView["components/PortfolioView.tsx"]
+        AuthButton["components/AuthButton.tsx"]
+    end
+
+    subgraph Library["Library Functions"]
+        AuthConfig["lib/auth.ts"]
+        MarkdownRender["lib/markdown.ts"]
+        DBClient["lib/db.ts"]
+        GoogleClient["lib/google-calendar.ts"]
+    end
+
+    Root --> AuthButton
+    DashCalendar --> Calendar
+    DashPortfolio --> MarkdownEditor
+    UserPortfolio --> PortfolioView
+    PortfolioView --> MarkdownRender
+
+    AuthRoute --> AuthConfig
+    EventsRoute --> GoogleClient
+    EventsRoute --> DBClient
+    PortfolioRoute --> DBClient
+    SyncRoute --> GoogleClient
+    SyncRoute --> DBClient

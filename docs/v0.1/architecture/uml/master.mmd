@@ -1,0 +1,83 @@
+%% LocalCal Master Architecture Diagram
+%% Shows the complete system context and component relationships
+
+graph TB
+    subgraph External["External Systems"]
+        GoogleAPI["Google Calendar API"]
+        iCloudICS["iCloud ICS Feed"]
+    end
+
+    subgraph Vercel["Vercel Platform"]
+        subgraph NextApp["Next.js Application"]
+            subgraph Pages["Pages (App Router)"]
+                Landing["/"]
+                CalendarPage["/calendar"]
+                PortfolioEdit["/(dashboard)/portfolio"]
+                PortfolioPublic["/[userSlug]/portfolio"]
+                Settings["/(dashboard)/settings"]
+            end
+
+            subgraph API["API Route Handlers"]
+                AuthAPI["/api/auth/[...nextauth]"]
+                EventsAPI["/api/events"]
+                PortfolioAPI["/api/portfolio"]
+                CalendarConnect["/api/calendar/connect"]
+                CalendarSync["/api/calendar/sync"]
+                ICSFeed["/api/calendar/[userSlug]/ical"]
+            end
+
+            subgraph Components["React Components"]
+                CalendarComp["Calendar"]
+                MarkdownEditor["MarkdownEditor"]
+                PortfolioView["PortfolioView"]
+            end
+
+            subgraph Lib["Library"]
+                AuthJS["Auth.js Config"]
+                MarkdownLib["Markdown Renderer"]
+                DB["Database Client"]
+            end
+        end
+
+        CronJob["Vercel Cron"]
+    end
+
+    subgraph Database["PostgreSQL (Neon/Supabase)"]
+        Users[(users)]
+        Portfolios[(portfolios)]
+        Events[(events)]
+        Connections[(calendar_connections)]
+    end
+
+    User((User)) --> Landing
+    User --> CalendarPage
+    User --> PortfolioEdit
+    User --> PortfolioPublic
+    User --> Settings
+
+    Landing --> AuthAPI
+    AuthAPI --> AuthJS
+    AuthJS --> GoogleAPI
+
+    CalendarPage --> EventsAPI
+    EventsAPI --> Events
+    EventsAPI --> GoogleAPI
+
+    PortfolioEdit --> PortfolioAPI
+    PortfolioAPI --> Portfolios
+    PortfolioAPI --> Users
+
+    CalendarConnect --> Connections
+    CalendarSync --> Connections
+    CalendarSync --> Events
+    CalendarSync --> GoogleAPI
+    CalendarSync --> iCloudICS
+
+    CronJob --> CalendarSync
+
+    ICSFeed --> Events
+
+    CalendarPage --> CalendarComp
+    PortfolioEdit --> MarkdownEditor
+    PortfolioPublic --> PortfolioView
+    PortfolioView --> MarkdownLib
