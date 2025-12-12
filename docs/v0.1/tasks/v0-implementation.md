@@ -28,7 +28,7 @@
 
 ```bash
 cd localcal-monorepo
-npx create-next-app@latest localcal-ui --typescript --tailwind --eslint --app --src-dir --import-alias "@/*"
+npx create-next-app@latest localcal-ui --typescript --eslint --app --src-dir --import-alias "@/*" --no-tailwind
 ```
 
 ### 0.2 Install Dependencies
@@ -36,6 +36,7 @@ npx create-next-app@latest localcal-ui --typescript --tailwind --eslint --app --
 ```bash
 cd localcal-ui
 npm install next-auth@beta
+npm install sass
 npm install -D @types/node vitest @vitejs/plugin-react jsdom @testing-library/react @testing-library/jest-dom @testing-library/user-event prettier
 ```
 
@@ -95,6 +96,32 @@ Update `package.json`:
   "test:watch": "vitest",
   "lint": "next lint",
   "format": "prettier --write ."
+}
+```
+
+### 0.6 Configure Root Layout
+
+**File:** `localcal-ui/src/app/layout.tsx`
+
+```typescript
+import type { Metadata } from 'next';
+import './globals.scss';
+
+export const metadata: Metadata = {
+  title: 'LocalCal',
+  description: 'Your local calendar assistant',
+};
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html lang="en">
+      <body>{children}</body>
+    </html>
+  );
 }
 ```
 
@@ -398,11 +425,11 @@ export function Calendar({ events }: CalendarProps) {
   }
 
   return (
-    <div role="list" aria-label="Calendar events">
+    <div role="list" aria-label="Calendar events" className="calendar-list">
       {events.map((event) => (
-        <article key={event.id} role="listitem" className="border p-4 mb-2 rounded">
-          <h3 className="font-bold">{event.title}</h3>
-          <time dateTime={event.start} className="text-sm text-gray-500">
+        <article key={event.id} role="listitem" className="calendar-event">
+          <h3>{event.title}</h3>
+          <time dateTime={event.start}>
             {new Date(event.start).toLocaleDateString(undefined, {
               weekday: 'long',
               year: 'numeric',
@@ -412,11 +439,50 @@ export function Calendar({ events }: CalendarProps) {
               minute: '2-digit',
             })}
           </time>
-          {event.location && <p className="text-sm">{event.location}</p>}
+          {event.location && <p className="location">{event.location}</p>}
         </article>
       ))}
     </div>
   );
+}
+```
+
+### 3.3 Create Global Styles
+
+**File:** `localcal-ui/src/app/globals.scss`
+
+```scss
+.calendar-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.calendar-event {
+  border: 1px solid #ccc;
+  padding: 1rem;
+  border-radius: 4px;
+
+  h3 {
+    margin: 0 0 0.5rem 0;
+    font-weight: bold;
+  }
+
+  time, .location {
+    display: block;
+    font-size: 0.9rem;
+    color: #666;
+  }
+}
+
+main {
+  padding: 2rem;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
 }
 ```
 
@@ -434,9 +500,9 @@ export default async function Home() {
   if (session?.accessToken) redirect('/calendar');
   
   return (
-    <main className="p-8">
-      <h1 className="text-2xl font-bold mb-4">LocalCal</h1>
-      <p className="mb-4">Connect your Google Calendar to view your events.</p>
+    <main>
+      <h1>LocalCal</h1>
+      <p>Connect your Google Calendar to view your events.</p>
       <AuthButton />
     </main>
   );
@@ -459,9 +525,9 @@ export default async function CalendarPage() {
   const events = await fetchGoogleCalendarEvents(session.accessToken);
 
   return (
-    <main className="p-8">
-      <header className="flex justify-between items-center mb-8">
-        <h1 className="text-2xl font-bold">Your Calendar</h1>
+    <main>
+      <header>
+        <h1>Your Calendar</h1>
         <AuthButton />
       </header>
       <Calendar events={events} />
